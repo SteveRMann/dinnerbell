@@ -8,7 +8,7 @@
 // -----------------------------
 // Pins
 // -----------------------------
-const int BUTTON_PIN = D3;   // GPIO0, active LOW
+const int BUTTON_PIN = D2;  // GPIO4, active High
 
 // Five LEDs (change pins as needed)
 const int LED_PINS[5] = { D4, D5, D6, D7, D8 };
@@ -54,8 +54,8 @@ void broadcastState() {
   Message msg;
   msg.ledState = ledState;
 
-  uint8_t broadcastAddr[] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
-  esp_now_send(broadcastAddr, (uint8_t*)&msg, sizeof(msg));
+  uint8_t broadcastAddr[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+  esp_now_send(broadcastAddr, (uint8_t *)&msg, sizeof(msg));
 }
 
 // -----------------------------
@@ -65,7 +65,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
 
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BUTTON_PIN, INPUT);
 
   for (int i = 0; i < 5; i++) {
     pinMode(LED_PINS[i], OUTPUT);
@@ -83,7 +83,7 @@ void setup() {
   esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
   esp_now_register_recv_cb(onReceive);
 
-  uint8_t broadcastAddr[] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+  uint8_t broadcastAddr[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
   esp_now_add_peer(broadcastAddr, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
 
   Serial.println("Ready.");
@@ -105,7 +105,7 @@ void loop() {
     }
 
     broadcastState();
-    delay(200); // debounce
+    delay(200);  // debounce
   }
 
   lastButtonState = button;
@@ -115,7 +115,7 @@ void loop() {
   // -----------------------------
   if (ledState) {
     unsigned long now = millis();
-    if (now - lastStep >= 200) {   // ms per LED
+    if (now - lastStep >= 200) {  // ms per LED
       lastStep = now;
 
       // Turn all LEDs off
