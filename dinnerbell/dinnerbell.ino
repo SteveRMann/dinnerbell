@@ -5,6 +5,11 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 
+extern "C" {
+#include "user_interface.h"
+}
+
+
 // -----------------------------
 // Pins
 // -----------------------------
@@ -41,6 +46,15 @@ void onReceive(uint8_t *mac, uint8_t *data, uint8_t len) {
 
   ledState = msg.ledState;
 
+  // Print RSSI of this packet
+  Serial.print("Received packet from ");
+  for (int i = 0; i < 6; i++) {
+    Serial.printf("%02X", mac[i]);
+    if (i < 5) Serial.print(":");
+  }
+  Serial.print(" RSSI: ");
+  Serial.println(WiFi.RSSI());
+
   if (!ledState) {
     // Turn all LEDs off
     for (int i = 0; i < 5; i++) digitalWrite(LED_PINS[i], LOW);
@@ -73,7 +87,9 @@ void setup() {
   }
 
   WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
+  WiFi.setOutputPower(20.5f);  // max TX power
+  WiFi.disconnect();           // required for ESP-NOW
+
 
   if (esp_now_init() != 0) {
     Serial.println("ESP-NOW init failed");
