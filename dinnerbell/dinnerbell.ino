@@ -36,6 +36,15 @@ struct Message {
 };
 
 // -----------------------------
+// Button debounce
+// -----------------------------
+bool lastReading = LOW;     // last raw read
+bool debouncedState = LOW;  // last stable state
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 60;  // ms
+
+
+// -----------------------------
 // Receive callback
 // -----------------------------
 void onReceive(uint8_t *mac, uint8_t *data, uint8_t len) {
@@ -108,10 +117,37 @@ void setup() {
 // -----------------------------
 // Loop
 // -----------------------------
-void loop() {
-  bool button = digitalRead(BUTTON_PIN);
 
-  // Detect falling edge (button press)
+void loop() {
+bool reading = digitalRead(BUTTON_PIN);
+
+// If the reading changed from last time, reset debounce timer
+if (reading != lastReading) {
+    lastDebounceTime = millis();
+}
+
+if ((millis() - lastDebounceTime) > debounceDelay) {
+    // If stable and changed from previous debounced state
+    if (reading != debouncedState) {
+        debouncedState = reading;
+
+        // Rising edge (LOW → HIGH)
+        if (debouncedState == HIGH) {
+            ledState = !ledState;
+
+            if (!ledState) {
+                for (int i = 0; i < 5; i++) digitalWrite(LED_PINS[i], LOW);
+            }
+
+            broadcastState();
+        }
+    }
+}
+
+lastReading = reading;
+
+
+  /*
   if (button == LOW && lastButtonState == HIGH) {
     ledState = !ledState;  // Toggle
 
@@ -123,8 +159,7 @@ void loop() {
     broadcastState();
     delay(200);  // debounce
   }
-
-  lastButtonState = button;
+*/
 
   // -----------------------------
   // LED chase animation
